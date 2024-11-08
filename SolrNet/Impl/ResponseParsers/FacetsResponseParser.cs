@@ -28,9 +28,8 @@ namespace SolrNet.Impl.ResponseParsers {
     /// <typeparam name="T">Document type</typeparam>
     public class FacetsResponseParser<T> : ISolrAbstractResponseParser<T> {
         public void Parse(XDocument xml, AbstractSolrQueryResults<T> results) {
-            var mainFacetNode = xml.Element("response")
-                .Elements("lst")
-                .FirstOrDefault(X.AttrEq("name", "facet_counts"));
+            var childNodes = xml.Element("response").Elements("lst");
+            var mainFacetNode = childNodes.FirstOrDefault(X.AttrEq("name", "facet_counts"));
             if (mainFacetNode != null) {
                 results.FacetQueries = ParseFacetQueries(mainFacetNode);
                 results.FacetFields = ParseFacetFields(mainFacetNode);
@@ -38,6 +37,11 @@ namespace SolrNet.Impl.ResponseParsers {
 				results.FacetPivots = ParseFacetPivots(mainFacetNode);
                 results.FacetRanges = ParseFacetRanges(mainFacetNode);
                 results.FacetIntervals = ParseFacetIntervals(mainFacetNode);
+            }
+            var functionsNode = childNodes.FirstOrDefault(X.AttrEq("name", "facets"));
+            if (functionsNode != null)
+            {
+                results.FacetFunctions = ParseFacetFunctions(functionsNode);
             }
         }
 
@@ -229,6 +233,21 @@ namespace SolrNet.Impl.ResponseParsers {
             }
 
 
+            return d;
+        }
+
+        /// <summary>
+        /// Parses facet aggregation functions (also called facet functions, analytic functions, or metrics)
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public IDictionary<string, object> ParseFacetFunctions(XElement node)
+        {
+            var d = new Dictionary<string, object>();
+            foreach (var fieldNode in node.Elements())
+            {
+                d.Add(fieldNode.Attribute("name").Value, fieldNode.Value);
+            }
             return d;
         }
 

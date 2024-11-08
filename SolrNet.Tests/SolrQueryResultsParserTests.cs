@@ -476,6 +476,20 @@ namespace SolrNet.Tests
         }
 
         [Fact]
+        public void ParseFacetFunctions()
+        {
+            var parser = new FacetsResponseParser<TestDocumentWithArrays>();
+            var xml = EmbeddedResource.GetEmbeddedXml(GetType(), "Resources.responseWithFacetStat.xml");
+            var r = new SolrQueryResults<TestDocumentWithArrays>();
+            parser.Parse(xml, r);
+            Assert.NotNull(r.FacetFunctions);
+            Assert.True(r.FacetFunctions.ContainsKey("count"));
+            Assert.True(r.FacetFunctions.ContainsKey("guids"));
+            Assert.Equal("150010", r.FacetFunctions["count"]);
+            Assert.Equal("30002", r.FacetFunctions["guids"]);
+        }
+
+        [Fact]
         public void ParseResponseHeader()
         {
             var parser = new HeaderResponseParser<TestDocument>();
